@@ -1,0 +1,14 @@
+{
+  "name": "claude-ship",
+  "description": "The ship skill: review-first shipping for agent-written code.",
+  "owner": {
+    "name": "Chris Nixon"
+  },
+  "plugins": [
+    {
+      "name": "ship",
+      "source": "./",
+      "description": "Take a ticket from a stack of small PRs to production, with review as the main job."
+    }
+  ]
+}

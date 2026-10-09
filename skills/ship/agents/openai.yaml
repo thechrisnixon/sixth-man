@@ -1,0 +1,5 @@
+interface:
+  display_name: "Ship"
+  short_description: "Take a ticket from spec to production through review, CI, hand-off, and rollout"
+policy:
+  allow_implicit_invocation: true

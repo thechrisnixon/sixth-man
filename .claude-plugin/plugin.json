@@ -1,0 +1,12 @@
+{
+  "name": "ship",
+  "version": "0.1.0",
+  "description": "Take a ticket from a stack of small PRs to production: an AI-reviewer loop gated on the head commit, a self-review before every push, splitting PRs whose review won't converge, advancing the stack as PRs merge, and a verified rollout.",
+  "author": {
+    "name": "Chris Nixon"
+  },
+  "homepage": "https://github.com/thechrisnixon/claude-ship",
+  "repository": "https://github.com/thechrisnixon/claude-ship",
+  "license": "MIT",
+  "keywords": ["code-review", "pull-requests", "stacked-prs", "copilot", "workflow"]
+}

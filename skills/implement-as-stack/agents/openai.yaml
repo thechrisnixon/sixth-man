@@ -1,0 +1,5 @@
+interface:
+  display_name: "Implement as a stack"
+  short_description: "Build a ticket and ship it as a stack of small, ordered pull requests"
+policy:
+  allow_implicit_invocation: true

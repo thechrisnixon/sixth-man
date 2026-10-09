@@ -1,6 +1,6 @@
 # Credits
 
-`ship` was written by Chris Nixon and is MIT-licensed (see [LICENSE](LICENSE)). It borrows from the
+The skills in sixth-man were written by Chris Nixon and are MIT-licensed (see [LICENSE](LICENSE)). They borrow from the
 work below. Each entry says whether files were **vendored** (copied into this repository) or an
 idea was **adapted** (written here in our own words), along with its licence.
 

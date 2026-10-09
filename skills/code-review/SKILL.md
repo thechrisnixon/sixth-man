@@ -20,7 +20,7 @@ the report. Findings name a concrete failure scenario, not a style opinion.
    number/URL was given. Include uncommitted changes when reviewing pre-commit.
 2. Load the authoritative convention layers **before** hunting — findings that contradict these
    files are wrong by definition: the repo's `AGENTS.md` or `CLAUDE.md` (and anything it
-   includes), its rules directory (for example `.claude/rules/*`), and any design doc those files
+   includes), its rules directory (for example `.claude/rules/*` or `.cursor/rules/*`), and any design doc those files
    declare as source of truth (the doc wins — flag divergence, don't silently pick a side).
 3. **Risk-triage the diff** before allocating effort. Risk is never inferred from diff size —
    Heartbleed was two lines.

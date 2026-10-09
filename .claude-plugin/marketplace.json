@@ -1,14 +1,14 @@
 {
-  "name": "claude-ship",
-  "description": "The ship skill: review-first shipping for agent-written code.",
+  "name": "sixth-man",
+  "description": "Chris Nixon's agent skills: review-first shipping for agent-written code.",
   "owner": {
     "name": "Chris Nixon"
   },
   "plugins": [
     {
-      "name": "ship",
+      "name": "sixth-man",
       "source": "./",
-      "description": "Take a ticket from a stack of small PRs to production, with review as the main job."
+      "description": "Agent skills for taking a ticket from a stack of small PRs to production, with review as the main job."
     }
   ]
 }

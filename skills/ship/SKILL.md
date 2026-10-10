@@ -44,6 +44,18 @@ Done when every slice is published with its CI label, and the AI reviewer is req
 
 ## 2. Watch
 
+When the environment supports subagents, start or reuse **one dedicated shipping agent per stack**.
+Read [COORDINATION.md](COORDINATION.md) before delegating. That agent owns the watcher and drives
+the review, CI, and stack-advancement steps below while the human reviews and merges. Starting a
+background shell that prints events is not enough: an active agent must consume those events and
+act on them.
+
+Give it the repository, ordered PR list, current bases and heads, its worktree, existing review
+dispositions, check evidence, decision log, and any running watcher/process IDs. Include the human's
+recorded decisions and authorization boundaries. It may fix and push within its assigned lane;
+merges, deploy approvals, and flag changes remain with the human. Reuse an existing agent or transfer
+ownership explicitly rather than starting competing watchers or writers for the same stack.
+
 Start [`scripts/watch-prs.sh`](scripts/watch-prs.sh) under a monitor, with the repo and a file
 listing the open PR numbers. It reports:
 
@@ -54,6 +66,22 @@ listing the open PR numbers. It reports:
 
 Add PRs to the list as they open. Re-arm the watcher when it expires while any PR is still in
 flight.
+
+Treat each event as a cue to verify the current head, open findings, and actual check runs before
+acting. A check from an older head is not evidence of a failure on a new head. A separate branch CI
+run does not replace the PR's required checks; verify both and never cancel the PR run merely because
+the branch run passed.
+
+The shipping agent reports meaningful changes to the coordinator: findings and their dispositions,
+failures, conflicts, and the next PR that is ready. It stays active after reporting a PR ready:
+waiting for a human merge is part of the job. Each merge triggers step 8 without another prompt.
+Before handing off a ready PR, re-read its head, review threads, and checks so a late review or head
+change is not missed. Keep watching until the stack is merged and the rollout is verified, the human
+pauses the work, or a blocker needs human action. A merge alone does not authorize production actions.
+
+If the environment cannot run a separate agent, the invoking agent owns this loop. If it cannot keep
+monitoring after its turn ends, say so and leave a resumable handoff with the PR order, heads, pending
+events, process IDs, and next action. Do not claim an unattended watcher will drive the work.
 
 A PR is **reviewed** when the reviewer's review carries its current head commit, or carries an
 earlier head whose own diff (against its base at the time) has the same patch-id as the current

@@ -39,9 +39,16 @@ When each round turns up new and genuine problems in different places, the pull 
 so it is split into a smaller stack; when only nits remain, the agent calls it production-ready and
 stops requesting reviews. Real bugs and security issues are always fixed. As each pull request
 merges, the next one is brought up to date, the rest are restacked by merging rather than rebasing,
-and you are told which one is ready. A merge is not treated as a deploy: deploy order across repos,
-verification against the live system, flags that default to off, and one-off data scripts that
-dry-run first are all part of being done. The skills never merge on your behalf; you merge, approve
+and you are told which one is ready.
+
+When subagents are available, a dedicated shipping agent watches the stack and acts on review, CI,
+and merge events while you review. It keeps watching after a PR is ready and advances the stack after
+each human merge. Without subagents, the invoking agent owns the same loop; if the runtime cannot
+keep it alive, it leaves an explicit handoff rather than claiming monitoring will continue.
+
+A merge is not treated as a deploy: deploy order across repos, verification against the live system,
+flags that default to off, and one-off data scripts that dry-run first are all part of being done.
+The skills never merge on your behalf; you merge, approve
 deploys, and flip flags.
 
 ## Requirements
@@ -95,14 +102,16 @@ use them), so any agent that loads skills or follows referenced instructions can
 1. In a repo with an `AGENTS.md`, ask your agent: *"Ship this ticket as a stack"*, and paste the
    ticket.
 2. Approve the slice plan when `implement-as-stack` asks for it.
-3. The agent opens the pull requests, requests the AI reviewer, and starts the watcher:
+3. The agent opens the pull requests, requests the AI reviewer, and assigns a dedicated shipping
+   agent when subagents are supported. That agent starts or takes over the watcher:
 
    ```bash
    skills/ship/scripts/watch-prs.sh owner/repo prs.txt
    ```
 
    `prs.txt` lists one pull-request number per line. Run the script under a monitor; each line it
-   prints is an event: a merge, a conflict, a failed check, or a new review on the head commit.
+   prints is an event: a merge, a conflict, a failed check, or a new review on the head commit. The
+   shipping agent consumes those events and drives the next action; the script alone only reports.
 4. Merge in the order the agent gives you. After each merge it brings the next pull request up to
    date and tells you when it is ready.
 

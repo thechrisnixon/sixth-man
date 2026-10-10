@@ -53,8 +53,9 @@ act on them.
 Give it the repository, ordered PR list, current bases and heads, its worktree, existing review
 dispositions, check evidence, decision log, and any running watcher/process IDs. Include the human's
 recorded decisions and authorization boundaries. It may fix and push within its assigned lane;
-merges, deploy approvals, and flag changes remain with the human. Reuse an existing agent or transfer
-ownership explicitly rather than starting competing watchers or writers for the same stack.
+merges, deploy approvals, flag changes, and production data writes remain with the human. Reuse an
+existing agent or transfer ownership explicitly rather than starting competing watchers or writers
+for the same stack.
 
 Start [`scripts/watch-prs.sh`](scripts/watch-prs.sh) under a monitor, with the repo and a file
 listing the open PR numbers. It reports:

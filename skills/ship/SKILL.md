@@ -76,12 +76,17 @@ The shipping agent reports meaningful changes to the coordinator: findings and t
 failures, conflicts, and the next PR that is ready. It stays active after reporting a PR ready:
 waiting for a human merge is part of the job. Each merge triggers step 8 without another prompt.
 Before handing off a ready PR, re-read its head, review threads, and checks so a late review or head
-change is not missed. Keep watching until the stack is merged and the rollout is verified, the human
+change is not missed. While waiting for a human merge, periodically refresh the head, all review
+threads and summaries, and check runs even when the watcher is silent. It only reports AI reviews on
+the current head; a late review of an older head may still raise applicable findings and needs step 3's
+verification. Keep watching until the stack is merged and the rollout is verified, the human
 pauses the work, or a blocker needs human action. A merge alone does not authorize production actions.
 
 If the environment cannot run a separate agent, the invoking agent owns this loop. If it cannot keep
-monitoring after its turn ends, say so and leave a resumable handoff with the PR order, heads, pending
-events, process IDs, and next action. Do not claim an unattended watcher will drive the work.
+monitoring after its turn ends, say so and leave a resumable handoff with the repository, PR order,
+bases and heads, watch list, pending events, worktree ownership and uncommitted work, review
+dispositions, check evidence, decision log, the human's recorded decisions and authorization
+boundaries, process IDs, and next action. Do not claim an unattended watcher will drive the work.
 
 A PR is **reviewed** when the reviewer's review carries its current head commit, or carries an
 earlier head whose own diff (against its base at the time) has the same patch-id as the current

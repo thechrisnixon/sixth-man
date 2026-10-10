@@ -5,8 +5,10 @@ colliding. The coordinator holds the merge order and assigns one dedicated shipp
 to consume watcher events and drive review, CI, and advancement. Each worker holds one lane.
 
 - **One active watcher owner per stack.** Reuse the assigned shipping agent. When replacing it,
-  transfer its watch list, current heads, review dispositions, check evidence, decision log, worktree
-  ownership, and recorded process IDs. The new owner takes over only after the previous owner has
+  transfer its repository, PR order, watch list, current bases and heads, pending events, review
+  dispositions, check evidence, decision log, the human's recorded decisions and authorization
+  boundaries, worktree ownership and uncommitted work, recorded process IDs, and next action. The new
+  owner takes over only after the previous owner has
   stopped acting. A watcher must not write in a lane another worker owns: delegate the fix to that
   worker or transfer the lane explicitly.
 - **Ready is not the end of watching.** Reporting the next PR ready does not end the shipping

@@ -154,8 +154,8 @@ step 4 calls the PR production-ready.
 
 ## 4. Judge convergence
 
-There is no fixed round limit. After each round's push, and before its summary comment, judge
-whether review is converging, and act on it. One of three calls:
+After each round's push, and before its summary comment, judge whether review is converging, and
+act on it. One of three calls, or the cap below:
 
 **No trend yet:** an early round, or the findings point no clear way. Re-request the reviewer and
 run another round.
@@ -178,8 +178,17 @@ of settled points. Make the production-ready call: don't re-request the reviewer
 remaining item a one-line disposition on its thread, and hand the PR off as ready. A PR that can't
 usefully split (about one file, or one concern) ends here too.
 
-No call skips a real bug, a security gap, or a data-integrity issue: those are fixed whatever the
-round. The call and its reason go in the round's summary comment (step 3, item 6).
+**The round cap: ask the human.** After the fifth round on a PR (the human may set another number),
+stop deciding alone. Don't re-request the reviewer, and don't start another round on your own.
+Bring the human the latest round's findings, one line each: what it is, real or cosmetic, how
+small the fix is, and your recommendation. Then ask one question: fix and stop, fix and run one
+more round, merge as is with a follow-up ticket, or split. Act on the answer. If they choose
+another round, ask again when it comes back. The cap turns an open-ended loop into a short series
+of decisions, and keeps the human steering where the PR has kept surprising the reviewer.
+
+No call of yours skips a real bug, a security gap, or a data-integrity issue: those are fixed
+whatever the round. Only the human can defer one, at the cap, and a deferral needs a follow-up
+ticket. The call and its reason go in the round's summary comment (step 3, item 6).
 
 ## 5. Keep the stack true
 

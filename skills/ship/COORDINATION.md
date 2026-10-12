@@ -18,6 +18,11 @@ to consume watcher events and drive review, CI, and advancement. Each worker hol
 
 - **One lane per agent.** An agent owns its pull requests and its worktree, and touches nothing
   else. An issue spotted on another agent's PR goes to the coordinator, not into a push.
+- **One writer per branch.** The agent that owns a stack owns every push to its branches,
+  restacks included. Anyone else, the coordinator too, asks the owner to push, or takes over
+  ownership explicitly (as above) before pushing. `--force-with-lease` is the safety net, not the
+  protocol: a lease stops one push from silently overwriting another, but the push it rejects is
+  wasted work, and two writers on one branch minutes apart will keep wasting it.
 - **Your own processes only.** Stop a process by the ID you recorded when you started it. A
   pattern-matched kill reaches other agents' checks, servers, and watchers.
 - **Fresh context for review.** Run self-review in a subagent that receives the diff and the repo's

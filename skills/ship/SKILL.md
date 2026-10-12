@@ -62,7 +62,8 @@ listing the open PR numbers. It reports:
 
 - **merges and closes** (and drops those PRs from the list)
 - **conflicts**
-- **failed checks**
+- **failed checks:** a check whose latest finished run on the current head failed or timed out.
+  Cancelled and skipped runs are not failures; a newer push cancels runs as a matter of course
 - **new AI reviews on the current head**, with the round count
 
 Add PRs to the list as they open. Re-arm the watcher when it expires while any PR is still in
@@ -139,10 +140,16 @@ Each round, for one PR:
 4. **Self-review** before pushing: run `code-review` on the PR's **full diff against its base**, not
    just the fix, plus `differential-review` when the PR touches auth, input, locking, or tokens. Fix
    what it confirms the same way, test-first. This is the step that turns "previously missed" into
-   "found first".
+   "found first". A fix that adds, removes, or reorders locks, or changes isolation, gets
+   `code-review`'s lock-order angle even when the PR didn't need it before: a fix for a race is the
+   classic way to introduce a deadlock.
 5. **Prove** each behavioural fix: its reproducing test, red before the fix and green after, or,
    for a finding no test can express, the check that exposed it; plus the suites the PR touches. A
-   test that never failed proves nothing.
+   test that never failed proves nothing. "The suites the PR touches" means every test file that
+   imports a changed module, directly or through another module, not only the files whose names or
+   grep hits match: a test can reach a changed function through a service it imports and fail
+   there. Use the runner's related-tests mode where it has one (`jest --findRelatedTests`,
+   `vitest related`), or follow the import graph; when in doubt, run the whole suite.
 6. **Push** once, after fetching, with a lease. Reply to each thread, and resolve it once its
    finding has a disposition. A thread waiting on the human stays open. Post one PR comment listing
    the reviewer's items, your self-review's findings and fixes, anything waiting on the human, what
@@ -184,13 +191,27 @@ round. The call and its reason go in the round's summary comment (step 3, item 6
 ## 5. Keep the stack true
 
 Once the stack is in review, these rules govern restacks; `implement-as-stack` restacks the same
-way. Never cascade-rebase: a rebase replays commits a squash-merge already landed, and it moves heads
-the reviewer has already reviewed.
+way. There are two sound ways to bring a PR up to date with its new base. The repo's conventions
+choose, or the human does; ask once per stack when neither has, and record the answer.
 
-- **Conflicts:** use `resolving-merge-conflicts`. When a squash-merge retargets a PR, merge the
-  trunk in, keeping the PR's side where it builds on the merged slice.
-- **Clean restacks:** use the forge's update-branch on each PR in stack order, waiting for each head
-  to move before starting the next. Hand-dispatch CI on any PR whose base isn't the trunk.
+- **(a) Merge, or the forge's update-branch.** Merges the new base into the PR. Every reviewed head
+  stays an ancestor of the new one, so the reviewer's view of history holds, at the cost of merge
+  commits in the PR's history.
+- **(b) Rebase only the PR's own commits.** `git rebase --onto <new base> <old base head>` per PR,
+  then `git push --force-with-lease`. Each PR's diff and history then show only its own commits,
+  which reads better in review. It moves the reviewed head, so whether the PR still counts as
+  reviewed is decided by step 2's patch-id rule, not by the head.
+
+Never rebase a PR onto its new base with a plain `git rebase <new base>`. After a squash-merge, the
+lower PR's commits are on the trunk under a different hash, and a plain rebase replays them on top,
+producing conflicts against their own squashed copy. `--onto <old base head>` names exactly where
+the PR's own commits start, so only those move.
+
+- **Order:** restack in stack order, one PR at a time, waiting for each head to move before starting
+  the next, since each PR's new base is the head just pushed.
+- **Conflicts:** use `resolving-merge-conflicts`, keeping the PR's side where it builds on the merged
+  slice.
+- **CI:** hand-dispatch CI on any PR whose base isn't the trunk.
 - **Re-review:** request the reviewer again only when the PR's own diff changed. Compare patch-ids
   (verbatim, per step 2), not heads.
 
@@ -212,6 +233,11 @@ Before calling anything ready, run the checks that prove it and quote their outp
 and the production build after any restack, and the PR's CI on its head. "Should pass" is not a
 status. `verification-before-completion` is the gate for every such claim, here and in step 3.
 
+"No open threads" is not "no open findings". Re-read the summary body of the latest review, on the
+current head or not, and confirm every item under "previously missed" (or however the reviewer
+labels findings it raised without a thread) has a disposition, per step 3. Those items have no
+thread to stay open, so they are the easiest real bug to hand off as ready.
+
 Give the human a table (PR, what it does, head, CI, reviewer status) and the **exact merge order**.
 Never merge.
 
@@ -220,8 +246,16 @@ Never merge.
 When the watcher reports `PR N MERGED`, it has already dropped N from its list. Advance the next PR
 in the merge order without being asked:
 
-1. **Bring it up to date.** A squash-merge retargets it to the trunk. Merge the trunk in: use the
-   forge's update-branch when it's clean, or `resolving-merge-conflicts` when it isn't.
+1. **Bring it up to date.** A squash-merge retargets it to the trunk. Bring it onto the trunk the
+   way step 5 chose: update-branch or a merge when that's the choice, an `--onto` rebase when it
+   isn't, and `resolving-merge-conflicts` when either conflicts.
+
+   A PR can also be merged into another PR's branch rather than the trunk, as when a human merges
+   two stacked PRs into their base PR's branch. Then the next PR's base may still be that other
+   PR's branch, now carrying the merged PR as one squashed commit. Bring it up to date against that
+   branch the same way, and resolve conflicts against the squashed content of the PR that merged
+   into it, not against its original commits. The trunk only comes into it when that base PR
+   merges.
 2. **Confirm** it's mergeable and not dirty.
 3. **Restack the rest** in order (step 5).
 4. **Reviewer state:** compare its diff's patch-id with the head the reviewer last reviewed.

@@ -43,6 +43,7 @@ Run angles as parallel subagents when available, sequentially otherwise. **Route
 | Cross-file tracer | exports/signatures/contracts changed |
 | Reuse / simplification / efficiency | new modules or >~100 added lines |
 | Altitude (right depth, not a bandaid) | changes touch shared infrastructure or add special cases |
+| Lock order | the diff adds, removes, or reorders locks (row locks, `SELECT ... FOR UPDATE`, advisory or table locks, mutexes) or changes transaction isolation |
 | Test coverage | behavior added/changed, or tests deleted/weakened |
 | Team checklist sweep | when the repo keeps a cross-cutting review checklist (migrations, env vars, permissions, …), per its triggers |
 
@@ -69,6 +70,13 @@ Angle definitions:
 - **Altitude** — is each change at the right depth? Special cases layered on shared
   infrastructure mean the fix isn't deep enough. Conventions enforced by comments should usually
   be mechanisms (a type, a constraint, a lint rule, a config list).
+- **Lock order** — a deadlock needs two writers, and the diff shows only one. For each table, row
+  set, or lock the change acquires, grep every other code path that locks the same thing
+  (handlers, jobs, triggers, scripts), and write down the order each one takes its locks in. Two
+  paths that take the same pair in opposite orders are a deadlock candidate; so is a lock now
+  taken while holding one it used to be taken without. A fix for a race is the usual source:
+  reordering acquisition to close one race opens a cycle with a writer the fix never looked at.
+  Isolation changes get the same sweep, for the serialization failures and retries they add.
 - **Test coverage** — for each new/changed behavior, find the test that would fail if the
   behavior regressed; no such test is a candidate. For each deleted or loosened test, name the
   case that lost coverage (removed-behavior's twin, applied to the test suite). Flag tests that

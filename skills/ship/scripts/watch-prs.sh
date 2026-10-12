@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Watches a set of open pull requests and prints one line per change worth
-# acting on: a merge or close, a conflict, a failed check, or a new review
-# from the AI reviewer on the current head. Run it under a monitor; each line
-# is an event. Merged and closed PRs are removed from the list.
+# acting on: a merge or close, a conflict, a check that failed on the current
+# head (never one that was cancelled or skipped), or a new review from the AI
+# reviewer on the current head. Run it under a monitor; each line is an event. Merged and closed PRs are removed from the list.
 #
 # Requires: gh (authenticated) and jq.
 #
@@ -56,18 +56,28 @@ while true; do
       seen "$PR.conflict" "$HEAD" || { echo "PR $PR CONFLICTING at ${HEAD:0:9}"; mark "$PR.conflict" "$HEAD"; }
     fi
 
-    # A check fails when no run of that name succeeded and one ended badly.
-    # Grouping by name keeps a duplicate run cancelled beside a passing one
-    # from reading as a failure.
+    # The rollup is the head commit's, read in the same call as the head, so
+    # every run here ran on the current head. A check fails when its latest
+    # finished run ended in failure: failure, timed out, or startup failure, or
+    # a failure or error status. Cancelled and skipped runs are never failures.
+    # A newer push or a duplicate trigger cancels runs as a matter of course,
+    # and reporting those buried the real failures. A run still in progress
+    # waits for its result. Runs are grouped by workflow and name, so a pass in
+    # one workflow doesn't hide a failure in another of the same name, and a
+    # retry that passes clears the failure before it.
     FAILED=$(jq -r '
-      [.statusCheckRollup[]? | {name: (.name // .context), result: (.conclusion // .state)}]
-      | group_by(.name)
-      | map(select(
-          (map(.result) | any(. == "SUCCESS" or . == "NEUTRAL" or . == "SKIPPED")) | not
-        ) | select(
-          map(.result) | any(. == "FAILURE" or . == "ERROR" or . == "TIMED_OUT" or . == "CANCELLED"
-            or . == "ACTION_REQUIRED" or . == "STARTUP_FAILURE" or . == "STALE")
-        ) | .[0].name)
+      [.statusCheckRollup[]?
+        | if .__typename == "StatusContext" or has("context")
+          then {key: ("status:" + .context), name: .context, result: .state,
+                at: (.startedAt // "")}
+          else select(.status == "COMPLETED")
+            | {key: ((.workflowName // "") + "/" + .name), name: .name,
+               result: (.conclusion // ""), at: (.completedAt // "")}
+          end
+        | select(.result | IN("SUCCESS", "NEUTRAL", "FAILURE", "TIMED_OUT", "STARTUP_FAILURE", "ERROR"))]
+      | group_by(.key)
+      | map(max_by(.at) | select(.result | IN("FAILURE", "TIMED_OUT", "STARTUP_FAILURE", "ERROR")) | .name)
+      | unique
       | join(", ")' <<<"$J")
     # Keyed by head and the failing set, so a new failure on the same commit,
     # or a retry failing again after a pass, is reported too.

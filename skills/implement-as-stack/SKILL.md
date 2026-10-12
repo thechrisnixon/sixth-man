@@ -10,9 +10,11 @@ ordered so a reviewer reads the foundations before what is built on them, sized 
 reads it in **under twenty minutes**, and chained so every pull request's diff is only its own
 slice. Each risky concern (a transaction, an auth boundary, token handling) gets a slice of its own
 with its tests: a reviewer can only attend to the hard part when nothing routine surrounds it.
-GitHub's native stacked pull requests hold the chain; the `gh stack` extension creates and publishes
-it (`gh extension install github/gh-stack` once; `gh stack <command> --help` is the reference for
-every command below).
+The chain is plain pull requests: each slice's base is the slice below it, and the bottom slice's
+base is the trunk. A native stack tool, such as the `gh stack` extension, can hold the same chain,
+but on GitHub a native stack refuses base changes and update-branch on its entries, which blocks
+the restacks a review loop needs. Use one only when the repo has chosen it, and then use it
+throughout; mixing the two is where the friction comes from.
 
 The stack is carved from a finished, green branch. Building slice by slice from the start lets the
 slice boundaries steer the design, and the reviewer then reads boundaries instead of the change.
@@ -52,8 +54,8 @@ is over budget.
 
 Work in a fresh worktree on the trunk; the integration branch is only ever read from.
 
-1. `gh stack init --base <trunk> <branch-1>` for the bottom slice. Each later slice is
-   `gh stack add <branch-n>` from the top of the stack, so every branch is based on the one below.
+1. Branch the bottom slice from the trunk, and each later slice from the slice below it
+   (`git switch -c <branch-n> <branch-n-1>`), so every branch is based on the one below.
 2. On each branch, `git checkout <integration-branch> -- <the slice's files>`, apply the slice's
    surgery, and run the repo's gates at CI strictness for what changed: the whole-project
    typecheck, the linter and formatter over the slice's files, and the suites the slice adds or
@@ -67,30 +69,40 @@ it, run fresh, per `verification-before-completion`.
 
 ## 4. Publish the stack
 
-`gh stack submit --auto --open` pushes every branch, opens a pull request per slice with the base
-branch below it, and creates the stack. Then give each pull request its real title and body with
-`gh pr edit`: the title is the imperative outcome plus `(<TICKET>, n of N)`; the body says what the
+Push every branch, then open one pull request per slice with its base set to the branch below it
+(`gh pr create --base <branch-n-1> --head <branch-n>`; the bottom slice's base is the trunk). Give
+each its real title and body: the title is the imperative outcome plus `(<TICKET>, n of N)`; the
+body carries a table of the whole stack in merge order, and says what the
 slice delivers, which file to read first, what the next slice adds when this one leaves code
 with no caller yet, and the decision-log entries that touch this slice. Add the labels the repo's
 CI gates on. Attach the pull requests to the ticket.
 
-GitHub runs the trunk's pull-request checks for every entry of a stack. Confirm a check run exists
-on each pull request; where a repo's workflow filters on the base branch and none appears, dispatch
-the workflow on that branch by hand and say so on the pull request.
+Confirm a check run exists on each pull request. A workflow whose pull-request trigger filters on
+the base branch (`branches: [main]`) runs nothing for a slice whose base is another slice; the
+lasting fix is to drop that filter, and until then dispatch the workflow on that branch by hand and
+say so on the pull request.
+
+Merge stacked slices with **rebase and merge** where the forge allows it. The slice above already
+holds the same commits, so once the merged branch is deleted the forge retargets it to the trunk
+with no restack. A squash merge rewrites the slice into one new commit, and every slice above then
+needs restacking onto it. Squash suits a lone pull request.
 
 Done when every slice has an open pull request with its title, a body naming its place in the
 stack, the labels its checks need, and a check run underway.
 
 ## 5. Keep the stack true
 
-Once the stack is published, restack by **merging**, never by rebasing; `ship` step 5 says why, and
-owns the review loop and these restacks in full. The short form:
+Once the stack is published, restack the way `ship` step 5 says the repo or the human chose: by
+merging, which keeps reviewed heads stable, or by `git rebase --onto <new base> <old base head>`
+per slice with `--force-with-lease`, which keeps each pull request's diff to its own commits.
+`ship` owns the review loop and these restacks in full. The short form:
 
 - A review finding lands on the slice it belongs to as an ordinary commit. Then each layer above
-  takes the one below by a merge, in stack order: the forge's update-branch when it's clean,
-  `resolving-merge-conflicts` when it isn't.
-- After each merge to the trunk, GitHub retargets the next pull request. Merge the trunk into it,
-  restack the layers above it the same way, and hand-dispatch CI on any whose base isn't the trunk.
+  takes the one below, in stack order, by the chosen method, as one batch of pushes;
+  `resolving-merge-conflicts` when it doesn't apply cleanly.
+- After each merge to the trunk, GitHub retargets the next pull request. After a rebase merge it
+  already holds the merged commits; after a squash merge, bring it onto the trunk and restack the
+  layers above it the same way.
 - When the trunk moves under the stack (a migration slot taken, a conflict), resolve on the bottom
   open slice first — regenerate a migration into the free slot rather than renumbering by hand —
   then restack upward.

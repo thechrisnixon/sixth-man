@@ -57,8 +57,9 @@ deploys, and flip flags.
 - The [GitHub CLI](https://cli.github.com) (`gh`), authenticated, and `jq`.
 - An AI pull-request reviewer. The watcher defaults to GitHub Copilot code review
   (`copilot-pull-request-reviewer[bot]`); set `REVIEW_BOT` to use another reviewer's login.
-- Optionally, a stacking tool such as the [`gh stack`](https://github.com/github/gh-stack) extension;
-  plain branches based on one another work too.
+- Nothing extra for stacks: they're plain pull requests, each based on the branch below. A native
+  stacking tool such as the [`gh stack`](https://github.com/github/gh-stack) extension also works if
+  you use it throughout, but it can refuse the base changes and branch updates a review loop needs.
 - An `AGENTS.md` (or your agent's equivalent, such as `CLAUDE.md`) naming your fast check, production
   build, any CI label that gates expensive jobs, and how you deploy. The skills refer to these by role.
 

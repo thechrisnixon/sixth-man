@@ -25,8 +25,9 @@ the term. Generated files ride with their source and never count toward size.
 
 A slice holds one concern. When the change has a risky one, such as a transaction, an auth or
 role boundary, token or credential handling, or a migration, that concern gets a slice of its own
-with its tests, even under the size budget. A risky slice that reaches the review cap is the one
-`ship` splits next, so keep its routine neighbours out of it from the start.
+with its tests, even under the size budget. A risky slice is the one most likely
+to reach `ship`'s review cap, where splitting it is one of the options put to the human, so keep its
+routine neighbours out of it from the start.
 
 ## Order: dependencies
 

@@ -7,7 +7,8 @@ description: "Take a ticket from spec to production: build it as a stack of smal
 
 One ticket in, verified in production out. `implement-as-stack` produces the stack; this skill owns
 everything after it: the **review loop**, **splitting** what won't converge, keeping the stack
-**true**, **advancing** it as PRs merge, and the **rollout**. The human merges, approves deploys,
+**true**, **advancing** it as PRs merge, the **rollout**, and a closing **sweep** for anything review
+raised that never got a home. The human merges, approves deploys,
 and flips flags. You prepare each of those so it is one action for them.
 
 The repo's `AGENTS.md` (or `CLAUDE.md`) names the concrete commands this skill refers to by role:
@@ -72,6 +73,13 @@ Treat each event as a cue to verify the current head, open findings, and actual 
 acting. A check from an older head is not evidence of a failure on a new head. A separate branch CI
 run does not replace the PR's required checks; verify both and never cancel the PR run merely because
 the branch run passed.
+
+**Work the stack bottom-up.** The next PR in the merge order gets the attention: its review rounds,
+its fixes, its CI. Leave the PRs above it alone until it is ready or merged. Running rounds on every
+layer at once means each lower fix forces a push up the whole stack, re-runs CI everywhere, and
+invites fresh reviews of heads that are about to move again, while nothing becomes mergeable any
+sooner. Carry a lower fix upward only as far as the layers above need to keep building, and in one
+batched push. When the bottom PR is ready, the next one becomes the focus.
 
 The shipping agent reports meaningful changes to the coordinator: findings and their dispositions,
 failures, conflicts, and the next PR that is ready. It stays active after reporting a PR ready:
@@ -242,6 +250,31 @@ It covers deploy order, live verification, flags, one-off scripts, and close-out
 
 Done when the change is verified on the live system and the tickets, worktrees, branches, and your
 own processes are closed out.
+
+## 10. Sweep for loose ends
+
+When the last PR of the stack merges, look back before calling the ticket done. A long review loop
+leaves callouts that were answered in a thread and then forgotten: a finding deferred "for a
+follow-up", a Low accepted at the cap, a "previously missed" item, something your own self-review
+noted as out of scope, a gap only noticed while restacking.
+
+1. **Gather** them from every PR in the stack, merged or closed: open and resolved threads, each
+   review's summary body (its "previously missed" items have no thread), your round summary
+   comments, the PR descriptions' accepted-behaviour notes, and any follow-up promised in your own
+   messages to the human.
+2. **Keep only what's still true on the trunk.** Check each against the trunk, not the PR head: a
+   later slice may have fixed it. Drop what's done or refuted, and say so.
+3. **Check for an existing home.** Search the tracker. A callout already covered by a ticket is
+   listed with that ticket, not filed again.
+4. **Offer each remaining one to the human**, one line apiece: what it is, real or cosmetic, how
+   big the fix is, and your recommendation. Then ask what to do with each: **fix now** in a small PR
+   off the trunk, **file a ticket** to track it, or **drop** it with the reason recorded.
+5. **Act on the answers.** A fix-now PR goes through steps 3 to 8 like any other. A ticket gets the
+   tracker's required fields and links to the PR and thread it came from. A drop is noted on the
+   original ticket.
+
+Done when every callout from the stack is fixed, ticketed, or deliberately dropped, and the human
+has seen the list.
 
 ## Running as several agents
 

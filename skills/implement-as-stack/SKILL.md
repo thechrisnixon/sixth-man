@@ -82,10 +82,10 @@ the base branch (`branches: [main]`) runs nothing for a slice whose base is anot
 lasting fix is to drop that filter, and until then dispatch the workflow on that branch by hand and
 say so on the pull request.
 
-Merge stacked slices with **rebase and merge** where the forge allows it. The slice above already
-holds the same commits, so once the merged branch is deleted the forge retargets it to the trunk
-with no restack. A squash merge rewrites the slice into one new commit, and every slice above then
-needs restacking onto it. Squash suits a lone pull request.
+Only a **merge commit** keeps a merged slice's commits identical, so that the forge retargets the
+slice above with nothing to restack. A squash merge, and on GitHub a rebase-and-merge too, gives
+the merged slice new commits, so every slice above needs a restack after each merge (step 5). Use
+whichever merge method the repo has chosen, and expect that restack unless it is merge commits.
 
 Done when every slice has an open pull request with its title, a body naming its place in the
 stack, the labels its checks need, and a check run underway.
@@ -100,9 +100,9 @@ per slice with `--force-with-lease`, which keeps each pull request's diff to its
 - A review finding lands on the slice it belongs to as an ordinary commit. Then each layer above
   takes the one below, in stack order, by the chosen method, as one batch of pushes;
   `resolving-merge-conflicts` when it doesn't apply cleanly.
-- After each merge to the trunk, GitHub retargets the next pull request. After a rebase merge it
-  already holds the merged commits; after a squash merge, bring it onto the trunk and restack the
-  layers above it the same way.
+- After each merge to the trunk, GitHub retargets the next pull request. Unless the repo merges
+  with merge commits, the merged slice landed as new commits, so bring the next one onto the trunk
+  and restack the layers above it the same way.
 - When the trunk moves under the stack (a migration slot taken, a conflict), resolve on the bottom
   open slice first — regenerate a migration into the free slot rather than renumbering by hand —
   then restack upward.

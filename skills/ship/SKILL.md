@@ -263,10 +263,11 @@ Never merge.
 When the watcher reports `PR N MERGED`, it has already dropped N from its list. Advance the next PR
 in the merge order without being asked:
 
-1. **Bring it up to date.** The merge retargets it to the trunk. After a rebase merge it already
-   holds the merged commits, so it usually needs nothing. After a squash merge, bring it onto the
-   trunk the way step 5 chose: update-branch or a merge when that's the choice, an `--onto` rebase
-   when it isn't, and `resolving-merge-conflicts` when either conflicts.
+1. **Bring it up to date.** The merge retargets it to the trunk. Only a merge commit keeps the
+   merged commits identical; a squash, or a rebase-and-merge on GitHub, gives them new SHAs. So
+   unless the repo merges with merge commits, bring it onto the trunk the way step 5 chose:
+   update-branch or a merge when that's the choice, an `--onto` rebase when it isn't, and
+   `resolving-merge-conflicts` when either conflicts.
 
    A PR can also be merged into another PR's branch rather than the trunk, as when a human merges
    two stacked PRs into their base PR's branch. Then the next PR's base may still be that other

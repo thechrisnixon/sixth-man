@@ -1,6 +1,6 @@
 {
   "name": "sixth-man",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agent skills for review-first shipping: take a ticket from a stack of small PRs to production, with self-review before every push, splitting PRs whose review won't converge, and a verified rollout.",
   "author": {
     "name": "Chris Nixon"

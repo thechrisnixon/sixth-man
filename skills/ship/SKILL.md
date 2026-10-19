@@ -111,14 +111,22 @@ Each round, for one PR:
 
 1. **Gather** every open thread, plus the summary's "previously missed" items. Those are findings
    even when no thread exists.
-2. **Verify** each finding before touching code, the way `code-review` verifies: restate it, then
-   rule it CONFIRMED / PLAUSIBLE / REFUTED. Decline what's refuted, with a reply that says why.
+2. **Verify** each finding before changing production code: restate it, then apply `code-review`'s
+   CONFIRMED / PLAUSIBLE / REFUTED classification. Decline what's refuted with the evidence.
    Bring a finding to the human only when it would reverse one of their recorded decisions, when
    its fix needs a test seam they haven't agreed (step 3), or when the **Disposition** rule below
    sends it there.
    Check each against the code, not the reviewer's framing:
    - **Context the reviewer lacks.** The PR may be one slice of a stack, so a "missing" piece can
      land in a later slice. The current code may exist for a reason the diff doesn't show.
+   - **Reproduce.** When the claimed behaviour is assertable at an agreed test seam, write and run
+     a regression before proposing a fix, refuting the finding, or taking it to the human. Use a
+     supported caller and runtime sequence, and record whether it fails for the claimed reason.
+     A passing test does not confirm the finding; check the test and source before classifying it.
+   - **Task fit.** Evaluate the reproduced behaviour against real callers, accepted requirements,
+     and stack boundaries. State its impact, the smallest viable fix, and whether that fix belongs
+     in this task. A failing test does not authorize expanding scope; bring a scope-changing fix
+     to the human with the evidence.
    - **Added surface.** When a finding asks you to build something out "properly", find its callers
      first. If nothing uses it, propose deleting it instead.
    - **Unverifiable.** Say so in the reply, and name what would settle it. Don't fix on faith.
@@ -137,8 +145,8 @@ Each round, for one PR:
      thread. A finding with no thread, such as a "previously missed" item, gets its disposition in
      step 6's round summary, which is the only top-level comment.
 3. **Fix** everything confirmed, in one batch, test-first through `tdd`: for each behavioural fix,
-   write the test that reproduces the finding and watch it fail for the right reason before changing
-   any code, then make the smallest fix that turns it green. Write it at a seam the PR's tests
+   reuse the verification reproducer or write one and prove it fails before changing production
+   code. Then make the smallest fix that turns it green. Write it at a seam the PR's tests
    already use, which the human agreed when the work was built; a fix that needs a new seam goes to
    the human first, as `tdd` requires. Test-, comment- and doc-only findings have no behaviour to
    reproduce. When no test can reproduce a finding, re-verify it against the code: decline it with
@@ -195,6 +203,8 @@ usefully split (about one file, or one concern) ends here too.
 
 **The round cap: ask the human.** After the fifth round on a PR (the human may set another number),
 stop deciding alone. Don't re-request the reviewer, and don't start another round on your own.
+Finish the verification above before asking, including a reproducer when assertable and task fit.
+The cap permits verification tests; production fixes and another review request wait for the choice.
 Bring the human the latest round's findings, one line each: what it is, real or cosmetic, how
 small the fix is, and your recommendation. Then ask one question: fix and stop, fix and run one
 more round, merge as is with a follow-up ticket, or split. Act on the answer. If they choose

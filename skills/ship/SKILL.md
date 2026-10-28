@@ -41,7 +41,8 @@ Run `implement-as-stack`. Size each slice so a reviewer can read it in **under t
 and give each risky concern (a transaction, an auth boundary, token handling) a slice of its own,
 with its tests. A reviewer can only attend to the hard part when nothing routine surrounds it.
 
-Done when every slice is published with its CI label, and the AI reviewer is requested on each.
+Done when every slice is published with the labels the repo's conventions call for at this point,
+and the AI reviewer is requested on each.
 
 ## 2. Watch
 
@@ -286,7 +287,7 @@ in the merge order without being asked:
    into it, not against its original commits. The trunk only comes into it when that base PR
    merges.
 2. **Confirm** it's mergeable and not dirty.
-3. **Restack the rest** in order (step 5).
+3. **Restack the rest** in order (step 5), now or as each comes up, as the repo's conventions say.
 4. **Reviewer state:** compare its diff's patch-id with the head the reviewer last reviewed.
    - Unchanged: comment that the diff is identical.
    - Changed: run step 3 for it.

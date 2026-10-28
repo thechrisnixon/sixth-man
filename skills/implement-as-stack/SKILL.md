@@ -75,7 +75,9 @@ each its real title and body: the title is the imperative outcome plus `(<TICKET
 body carries a table of the whole stack in merge order, and says what the
 slice delivers, which file to read first, what the next slice adds when this one leaves code
 with no caller yet, and the decision-log entries that touch this slice. Add the labels the repo's
-CI gates on. Attach the pull requests to the ticket.
+CI gates on, when the repo's conventions say to: a repo may hold the label for its expensive jobs
+back until a slice is next to merge, so the full run happens once, on the head that merges. Attach
+the pull requests to the ticket.
 
 Confirm a check run exists on each pull request. A workflow whose pull-request trigger filters on
 the base branch (`branches: [main]`) runs nothing for a slice whose base is another slice; the
@@ -84,11 +86,11 @@ say so on the pull request.
 
 Only a **merge commit** keeps a merged slice's commits identical, so that the forge retargets the
 slice above with nothing to restack. A squash merge, and on GitHub a rebase-and-merge too, gives
-the merged slice new commits, so every slice above needs a restack after each merge (step 5). Use
+the merged slice new commits, so each slice above needs a restack before it merges (step 5). Use
 whichever merge method the repo has chosen, and expect that restack unless it is merge commits.
 
 Done when every slice has an open pull request with its title, a body naming its place in the
-stack, the labels its checks need, and a check run underway.
+stack, the labels the repo's conventions call for at this point, and a check run underway.
 
 ## 5. Keep the stack true
 
@@ -101,8 +103,9 @@ per slice with `--force-with-lease`, which keeps each pull request's diff to its
   takes the one below, in stack order, by the chosen method, as one batch of pushes;
   `resolving-merge-conflicts` when it doesn't apply cleanly.
 - After each merge to the trunk, GitHub retargets the next pull request. Unless the repo merges
-  with merge commits, the merged slice landed as new commits, so bring the next one onto the trunk
-  and restack the layers above it the same way.
+  with merge commits, the merged slice landed as new commits, so bring the next one onto the trunk.
+  Restack the layers above it the same way, now or as each comes up; the repo's conventions say
+  which. Restacking every layer restarts every layer's CI.
 - When the trunk moves under the stack (a migration slot taken, a conflict), resolve on the bottom
   open slice first — regenerate a migration into the free slot rather than renumbering by hand —
   then restack upward.
